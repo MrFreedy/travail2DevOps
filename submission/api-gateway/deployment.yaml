@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: mrfreedy/api-gateway:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: LOGIC_API_URL
+              value: http://logic-api:5000
+            - name: FEEDBACK_API_URL
+              value: http://feedback-api:9000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
