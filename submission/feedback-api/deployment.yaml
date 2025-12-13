@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feedback-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feedback-api
+  template:
+    metadata:
+      labels:
+        app: feedback-api
+    spec:
+      containers:
+        - name: feedback-api
+          image: mrfreedy/feedback-api:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: DATABASE_DIR
+              value: /data
+          volumeMounts:
+            - name: sqlite-storage
+              mountPath: /data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: sqlite-storage
+          persistentVolumeClaim:
+            claimName: feedback-api-pvc
