@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logic-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logic-api
+  template:
+    metadata:
+      labels:
+        app: logic-api
+    spec:
+      containers:
+        - name: logic-api
+          image: mrfreedy/logic-api:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 5
+
