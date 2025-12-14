@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: logic-api
-          image: mrfreedy/logic-api:v1
+          image: mrfreedy/logic-api:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000

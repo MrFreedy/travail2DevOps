@@ -1,12 +1,16 @@
 FROM python:3.8-slim-buster
 
-COPY api /app
 WORKDIR /app
+COPY api /app
 
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN python -m textblob.download_corpora && \
+    python - <<EOF
+import nltk
+nltk.download('punkt_tab')
+EOF
 
 EXPOSE 5000
-ENTRYPOINT ["/entrypoint.sh"]
+
+CMD ["python", "logic_server.py"]
