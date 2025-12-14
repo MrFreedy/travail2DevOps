@@ -1,70 +1,175 @@
 # Description de la remise
 
-### Nom complet: LENNE Arthur, EL OUAD Zakaria
-### NIP: 537 389 563, 537 404 664
+### Nom complet  
+LENNE Arthur, EL OUAD Zakaria
 
-### Liste des codes et descriptions des fonctionnalités sélectionnées:
+### NIP  
+537 389 563, 537 404 664
 
-- (FA31) Intégration d’un outil de gestion de journaux (Loki) ==> 5%  
-  Centralisation des logs de tous les pods Kubernetes via Loki, consultables depuis Grafana.
+---
 
-- (FA32) Intégration de monitoring des ressources physiques (CPU, Mémoire, etc.) avec Prometheus ==> 5%  
-  Collecte et supervision des métriques du cluster Kubernetes (CPU, mémoire, état des pods, services).
+## Liste des codes et descriptions des fonctionnalités sélectionnées
 
-- (FA34) Visualisation des métriques et journaux (Grafana) ==> 10%  
-  Visualisation unifiée des métriques Prometheus et des logs Loki via Grafana.
+- **(FA31) Intégration d’un outil de gestion de journaux (Loki) – 5%**  
+  Centralisation des logs de l’ensemble des pods Kubernetes via Loki.  
+  Les journaux applicatifs sont collectés automatiquement (Promtail) et consultables en temps réel depuis Grafana.
+
+- **(FA32) Intégration du monitoring des ressources physiques (Prometheus) – 5%**  
+  Supervision des ressources du cluster Kubernetes (CPU, mémoire, état des pods et des services) via Prometheus.
+
+- **(FA34) Visualisation des métriques et journaux (Grafana) – 10%**  
+  Visualisation unifiée des métriques Prometheus et des logs Loki via Grafana à l’aide de dashboards préconfigurés.
 
 **Total des fonctionnalités avancées implémentées : 20%**
 
 ---
 
-### Directives nécessaires à la correction
+## Directives nécessaires à la correction
+
+### Déploiement du projet
 
 - Le projet est déployé sur un cluster Kubernetes local (kind).
-- Les services sont accessibles via Ingress.
-- Grafana est exposé via port-forward ou Ingress selon la configuration locale.
-- Les dashboards Grafana permettent :
-  - la visualisation des métriques Prometheus
-  - l’exploration des logs Loki
-- Aucun outil externe n’est requis en dehors de Kubernetes, Helm et kubectl.
+- **Toutes les ressources Kubernetes nécessaires sont fournies dans le dossier `./submission`.**
+- Le déploiement complet peut être réalisé via la commande unique suivante :
+
+```bash
+kubectl apply -f ./submission
+```
+Aucune configuration manuelle supplémentaire n’est requise après cette commande.
+
+### Prérequis techniques
+
+Les outils suivants sont requis sur la machine de correction :
+
+- ```kubectl```
+
+- ```helm``` (utilisé uniquement pour la génération des manifests Kubernetes)
+
+> ⚠️ Important
+Helm n’est pas requis au moment de la correction.
+Il a été utilisé uniquement pour générer les manifests Kubernetes statiques (Prometheus, Grafana, Loki, Promtail) via la commande helm template.
+
+### Accès aux services applicatifs
+
+Les services applicatifs sont exposés via Ingress NGINX.
+
+Sur macOS (Docker Desktop + kind), des limitations réseau connues peuvent empêcher un accès direct à l’Ingress.
+
+Dans ce cas, la validation a été réalisée via ```kubectl port-forward```, par exemple :
+
+```bash
+kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+```
 
 
-### Commentaires généraux
+Cette méthode permet de valider le fonctionnement applicatif indépendamment des contraintes réseau locales.
+
+### Accès à Grafana
+
+Grafana est déployé dans le namespace ```monitoring```.
+
+Accès recommandé pour la correction :
+
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+
+
+- URL : http://localhost:3000
+
+- Identifiants :
+
+  - Utilisateur : admin
+
+  - Mot de passe : prom-operator
+
+Les identifiants sont générés automatiquement et stockés dans les secrets Kubernetes.
+
+
+## Dashboards Grafana
+
+Un dashboard Grafana est automatiquement provisionné au démarrage.
+
+Aucun import manuel n’est nécessaire.
+
+Le dashboard permet :
+
+- la consultation des logs applicatifs via Loki
+
+- la visualisation de l’utilisation CPU par pod
+
+- la visualisation de l’utilisation mémoire par pod
+
+
+## Commentaires généraux
 
 L’ensemble du projet a été validé fonctionnellement sur un environnement Kubernetes local (kind) exécuté sur macOS (architecture arm64).
-Certaines adaptations techniques ont été nécessaires afin de contourner des limitations spécifiques à l’environnement et à des dépendances obsolètes, tout en respectant strictement les consignes du TP.
 
-La validation du frontend a été effectuée via kubectl port-forward, ce qui a permis de confirmer le bon fonctionnement applicatif indépendamment du comportement de l’Ingress NGINX sur macOS.
-En effet, des problèmes connus de redirection réseau entre Docker Desktop, kind et l’Ingress Controller sur macOS ont nécessité l’utilisation du port-forward pour les tests locaux. Cette approche n’impacte pas le déploiement final sur un environnement Linux standard, tel que celui utilisé pour la correction.
+Certaines adaptations techniques ont été nécessaires afin de contourner :
+- des limitations liées à l’architecture arm64,
+- des images Docker obsolètes,
+- et des comportements réseau spécifiques à Docker Desktop sur macOS, tout en respectant strictement les consignes du TP.
 
-#### Adaptation technique – Images Java (arm64)
+## Validation via port-forward
 
-Les images Docker ```openjdk:8-jre-alpine``` et ```maven:3.5-jdk-8-alpine``` étant dépréciées et non compatibles avec l’architecture arm64, elles ont été remplacées par des images maintenues et multi-architecture :
+La validation du frontend et des services backend a été réalisée via ```kubectl port-forward```.
+Cette approche a permis de confirmer le bon fonctionnement applicatif indépendamment du comportement de l’Ingress NGINX sur macOS.
+
+Ces limitations sont spécifiques à l’environnement local et n’impactent pas un déploiement Linux standard, tel que celui utilisé pour la correction.
+
+## Adaptation technique – Images Java (arm64)
+
+Les images Docker initiales :
+- ```openjdk:8-jre-alpine```
+- ```maven:3.5-jdk-8-alpine```
+
+étant dépréciées et incompatibles avec l’architecture arm64, elles ont été remplacées par :
 
 - ```eclipse-temurin:8-jre```
-
 - ```maven:3.9.6-eclipse-temurin-8```
 
-Le projet reposant sur Spring Boot 1.5.x, Java 8 a volontairement été conservé afin de garantir la compatibilité applicative.
-Cette adaptation est conforme aux directives communiquées par l’enseignant et a été documentée afin d’assurer la transparence de la démarche.
+Le projet utilisant Spring Boot 1.5.x, Java 8 a été conservé afin de garantir la compatibilité applicative, conformément aux directives communiquées par l’enseignant.
 
-#### Observabilité et validation des services
+## Observabilité et supervision
 
-L’observabilité du système a été renforcée via :
+L’observabilité du système repose sur :
 
-- Prometheus pour la collecte des métriques système et applicatives,
+- Prometheus pour la collecte des métriques Kubernetes et système
 
-- Loki pour la centralisation des journaux des services,
+- Loki pour la centralisation des journaux applicatifs
 
-- Grafana pour la visualisation unifiée des métriques et des logs.
+- Grafana pour la visualisation unifiée
 
-L’ensemble des services expose des endpoints ```/health```, utilisés à la fois pour les probes Kubernetes et pour la supervision, garantissant une visibilité claire sur l’état global de l’application.
+Tous les services exposent un endpoint ```/health```, utilisé pour :
+- les probes Kubernetes (liveness/readiness)
+- la supervision globale de l’état de l’application
 
-### Preuves de mise en œuvre des fonctionnalités avancées
+## Dashboards et logs préconfigurés
+
+Les datasources Grafana (Prometheus et Loki) sont automatiquement provisionnées.
+
+Le dashboard Grafana est chargé via ```ConfigMap``` au démarrage. Il est visible dans les dashboards de Grafana sous le nom de **Kubernetes Observability Microservices**
+
+Les panels sont explicitement liés aux bonnes datasources afin d’éviter tout fallback automatique.
+
+## Preuves de mise en œuvre des fonctionnalités avancées
 
 Les fonctionnalités FA31, FA32 et FA34 ont été validées via l’interface Grafana.
 
-Des captures d’écran sont fournies dans le dossier `submission/screenshots` :
-- Visualisation des logs centralisés via Loki (FA31)
-- Monitoring des ressources Kubernetes via Prometheus (FA32)
-- Visualisation unifiée des métriques et logs dans Grafana (FA34)
+Des captures d’écran sont disponibles dans le dossier ```submission/screenshots```
+
+
+Elles illustrent :
+
+- la centralisation des logs via Loki (FA31)
+
+- le monitoring CPU et mémoire via Prometheus (FA32)
+
+- la visualisation unifiée des métriques et logs dans Grafana (FA34)
+
+## Remarque finale
+
+Les composants d’observabilité (Prometheus, Grafana, Loki, Promtail) ont été déployés initialement via Helm, puis exportés en manifests Kubernetes statiques (helm template) afin de respecter la contrainte suivante :
+
+Un déploiement unique via kubectl apply -f ./submission, sans dépendance à Helm lors de la correction.
+
+
+---
