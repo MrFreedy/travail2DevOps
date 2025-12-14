@@ -1,0 +1,29 @@
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+  useTestSchema: true
+
+  commonConfig:
+    replication_factor: 1
+
+  storage:
+    type: filesystem
+
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+
+singleBinary:
+  replicas: 1
+
+service:
+  port: 3100
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
