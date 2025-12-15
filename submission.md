@@ -9,6 +9,9 @@ LENNE Arthur, EL OUAD Zakaria
 ---
 
 ## Liste des codes et descriptions des fonctionnalités sélectionnées
+- **(FA1) Sécurisation et chiffrement des communications via certificats TLS (Ingress HTTPS) - 10%**  
+  Mise en place du chiffrement HTTPS au niveau de l’Ingress NGINX grâce à des certificats TLS, garantissant la sécurité des communications entre le navigateur et les services exposés.
+
 
 - **(FA31) Intégration d’un outil de gestion de journaux (Loki) – 5%**  
   Centralisation des logs de l’ensemble des pods Kubernetes via Loki.  
@@ -108,14 +111,14 @@ Certaines adaptations techniques ont été nécessaires afin de contourner :
 - des images Docker obsolètes,
 - et des comportements réseau spécifiques à Docker Desktop sur macOS, tout en respectant strictement les consignes du TP.
 
-## Validation via port-forward
+### Validation via port-forward
 
 La validation du frontend et des services backend a été réalisée via ```kubectl port-forward```.
 Cette approche a permis de confirmer le bon fonctionnement applicatif indépendamment du comportement de l’Ingress NGINX sur macOS.
 
 Ces limitations sont spécifiques à l’environnement local et n’impactent pas un déploiement Linux standard, tel que celui utilisé pour la correction.
 
-## Adaptation technique – Images Java (arm64)
+### Adaptation technique – Images Java (arm64)
 
 Les images Docker initiales :
 - ```openjdk:8-jre-alpine```
@@ -128,7 +131,7 @@ Les images Docker initiales :
 
 Le projet utilisant Spring Boot 1.5.x, Java 8 a été conservé afin de garantir la compatibilité applicative, conformément aux directives communiquées par l’enseignant.
 
-## Observabilité et supervision
+### Observabilité et supervision
 
 L’observabilité du système repose sur :
 
@@ -142,7 +145,7 @@ Tous les services exposent un endpoint ```/health```, utilisé pour :
 - les probes Kubernetes (liveness/readiness)
 - la supervision globale de l’état de l’application
 
-## Dashboards et logs préconfigurés
+### Dashboards et logs préconfigurés
 
 Les datasources Grafana (Prometheus et Loki) sont automatiquement provisionnées.
 
@@ -150,7 +153,7 @@ Le dashboard Grafana est chargé via ```ConfigMap``` au démarrage. Il est visib
 
 Les panels sont explicitement liés aux bonnes datasources afin d’éviter tout fallback automatique.
 
-## Preuves de mise en œuvre des fonctionnalités avancées
+### Preuves de mise en œuvre des fonctionnalités avancées
 
 Les fonctionnalités FA31, FA32 et FA34 ont été validées via l’interface Grafana.
 
@@ -164,6 +167,29 @@ Elles illustrent :
 - le monitoring CPU et mémoire via Prometheus (FA32)
 
 - la visualisation unifiée des métriques et logs dans Grafana (FA34)
+
+#### Sécurisation des communications – HTTPS (FA1)
+
+Les communications externes vers l’application sont sécurisées via HTTPS grâce à l’utilisation de certificats TLS configurés au niveau de l’Ingress NGINX.
+
+Le chiffrement est appliqué à l’entrée du cluster Kubernetes, ce qui garantit que toutes les requêtes entre le navigateur et les services (frontend et API Gateway) sont transmises de manière sécurisée.  
+Les services internes communiquent ensuite en HTTP au sein du cluster, conformément aux bonnes pratiques Kubernetes.
+
+Le frontend React utilise des routes relatives (`/api/...`) pour les appels API, ce qui permet au navigateur de réutiliser automatiquement le protocole HTTPS sans configuration supplémentaire côté client.
+
+Lors des phases de validation locale sur macOS, l’accès aux services a pu être réalisé via `kubectl port-forward` à des fins de test uniquement. Cette méthode n’affecte pas la configuration finale HTTPS mise en place via l’Ingress et les certificats TLS.
+
+##### Accès HTTPS pour la validation
+
+L’Ingress HTTPS peut être testé localement via :
+
+kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8443:443
+
+Puis accéder à l’application via :
+https://localhost:8443
+
+Un avertissement de certificat auto-signé peut apparaître selon la configuration locale, ce qui est attendu dans un environnement de test.
+
 
 ## Remarque finale
 
